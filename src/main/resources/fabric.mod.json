@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "blockracing_board",
+  "version": "${version}",
+  "name": "BlockRacing Task Board",
+  "description": "A read-only 8x8 live team task board for BlockRacing.",
+  "environment": "client",
+  "license": "AGPL-3.0-only",
+  "entrypoints": {"client": ["top.lqsnow.blockracing.client.BoardClient"]},
+  "mixins": ["blockracing-board.mixins.json"],
+  "depends": {"fabricloader": ">=0.19.5", "minecraft": "26.2", "java": ">=25", "fabric-api": "*"}
+}

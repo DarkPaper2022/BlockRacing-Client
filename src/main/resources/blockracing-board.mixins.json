@@ -1,0 +1,7 @@
+{
+  "required": true,
+  "package": "top.lqsnow.blockracing.client.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": ["KeyboardHandlerMixin", "PlayerTabOverlayMixin"],
+  "injectors": {"defaultRequire": 1}
+}
