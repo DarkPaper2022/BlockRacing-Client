@@ -152,13 +152,13 @@ public final class BoardScreen extends Screen {
         });
     }
     @Override public boolean keyPressed(KeyEvent event) {
-        if (event.key() == GLFW.GLFW_KEY_TAB && event.modifiers() == 0) { onClose(); return true; }
+        if (event.key() == GLFW.GLFW_KEY_TAB && (event.modifiers() & BoardKeyPolicy.ACTIVE_MODIFIERS) == 0) { onClose(); return true; }
         if (event.key() == GLFW.GLFW_KEY_PAGE_DOWN) { page++; return true; }
         if (event.key() == GLFW.GLFW_KEY_PAGE_UP) { page = Math.max(0, page - 1); return true; }
         if (event.key() == GLFW.GLFW_KEY_B) { bonusPage++; if (BoardClient.snapshot != null) bonusPage %= pages((int) BoardClient.snapshot.tasks().stream().filter(BoardState.Task::bonus).count(), 3); return true; }
         int direction = switch (event.key()) { case GLFW.GLFW_KEY_LEFT -> -1; case GLFW.GLFW_KEY_RIGHT -> 1;
             case GLFW.GLFW_KEY_UP -> -8; case GLFW.GLFW_KEY_DOWN -> 8; default -> 0; };
-        if (direction != 0) { focus = Math.floorMod(Math.max(0, focus) + direction, 64); return true; }
+        if (direction != 0) { focus = focus < 0 ? 0 : Math.floorMod(focus + direction, 64); return true; }
         return super.keyPressed(event);
     }
     @Override public boolean mouseScrolled(double x, double y, double horizontal, double vertical) {

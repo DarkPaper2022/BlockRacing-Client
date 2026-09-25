@@ -15,5 +15,10 @@ class BoardKeyPolicyTest {
         assertFalse(BoardKeyPolicy.intercept(GLFW.GLFW_PRESS, GLFW.GLFW_KEY_TAB, GLFW.GLFW_MOD_SHIFT, true, false));
         assertFalse(BoardKeyPolicy.intercept(GLFW.GLFW_RELEASE, GLFW.GLFW_KEY_TAB, 0, true, false));
         assertFalse(BoardKeyPolicy.intercept(GLFW.GLFW_PRESS, GLFW.GLFW_KEY_T, 0, true, false));
+        // Caps Lock (0x0010) and Num Lock (0x0020) must not block ordinary Tab from opening the board
+        assertTrue(BoardKeyPolicy.intercept(GLFW.GLFW_PRESS, GLFW.GLFW_KEY_TAB, GLFW.GLFW_MOD_CAPS_LOCK, true, false));
+        assertTrue(BoardKeyPolicy.intercept(GLFW.GLFW_PRESS, GLFW.GLFW_KEY_TAB, GLFW.GLFW_MOD_NUM_LOCK, true, false));
+        assertFalse(BoardKeyPolicy.intercept(GLFW.GLFW_PRESS, GLFW.GLFW_KEY_TAB,
+                GLFW.GLFW_MOD_SHIFT | GLFW.GLFW_MOD_NUM_LOCK, true, false));
     }
 }

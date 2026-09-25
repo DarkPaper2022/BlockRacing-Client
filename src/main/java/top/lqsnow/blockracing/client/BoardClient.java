@@ -17,7 +17,6 @@ public final class BoardClient implements ClientModInitializer {
         PayloadTypeRegistry.clientboundPlay().register(BoardPayload.TYPE, BoardPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(BoardPayload.Request.TYPE, BoardPayload.Request.CODEC);
         ClientPlayNetworking.registerGlobalReceiver(BoardPayload.TYPE, (payload, context) -> {
-            if (!(context.client().gui.screen() instanceof BoardScreen)) return;
             try {
                 snapshot = BoardState.decode(payload.data());
                 receivedAt = System.nanoTime();
@@ -47,7 +46,7 @@ public final class BoardClient implements ClientModInitializer {
                 client.gui.screen() != null && !(client.gui.screen() instanceof BoardScreen))) return false;
         if (action == GLFW.GLFW_PRESS) {
             if (client.gui.screen() instanceof BoardScreen) client.gui.setScreen(null);
-            else { clear(); client.gui.setScreen(new BoardScreen()); }
+            else { error = ""; client.gui.setScreen(new BoardScreen()); }
         }
         return true; // Consume repeats so a held key cannot toggle repeatedly.
     }
