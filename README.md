@@ -4,7 +4,7 @@ Minecraft 26.2 的 Fabric **纯客户端**模组；为配套的 [BlockRacing Pap
 
 ## 使用
 
-安装 Fabric Loader 0.19.5+、对应 Minecraft 26.2 的 Fabric API，以及本模组 JAR。需要 Java 25+。服务端需包含 `blockracing:board_request` / `blockracing:board_v1` 桥接接口；普通服务器上不接管 Tab。
+安装 Fabric Loader 0.19.3+、Minecraft 26.2 的 Fabric API 0.154.0+，以及本模组 JAR。需要 Java 25+。服务端需包含 `blockracing:board_request` / `blockracing:board_v1` 桥接接口；普通服务器上不接管 Tab。
 
 - 游戏内按一次 **Tab** 打开，再按 Tab 或 **Esc** 关闭；打开期间不暂停游戏。
 - **Shift+Tab** 在游戏画面中保留原版玩家列表（玩家列表仍绑定 Tab 时）。聊天、背包等界面的 Tab 不接管，也不改写原有键位配置。
@@ -20,7 +20,7 @@ JAVA_HOME=/path/to/jdk-25-or-newer ./gradlew build
 
 产物 `build/libs/blockracing-client-0.1.0.jar`（不要安装 `-sources.jar`）。首次构建需要网络；Gradle 9.5.1 分发带 SHA-256 校验。使用项目内缓存可额外设置 `GRADLE_USER_HOME=/absolute/path/to/local-cache`，无需全局安装 Gradle。
 
-固定依赖：Minecraft 26.2、Fabric Loader 0.19.5、Fabric API 0.159.0+26.2、Loom 1.17.20。模组源码 AGPL-3.0；Gradle wrapper 属于 Gradle 项目（Apache-2.0）。没有打包 Minecraft JAR、资源包或其他 Mojang 素材。
+固定构建基线：Minecraft 26.2、Fabric Loader 0.19.3、Fabric API 0.154.0+26.2、Loom 1.17.20。运行时允许同一 Minecraft 版本上的更新兼容版本。模组源码 AGPL-3.0；Gradle wrapper 属于 Gradle 项目（Apache-2.0）。没有打包 Minecraft JAR、资源包或其他 Mojang 素材。
 
 ## 协议与边界
 
