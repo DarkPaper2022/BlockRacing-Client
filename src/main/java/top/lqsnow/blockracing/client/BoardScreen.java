@@ -52,10 +52,24 @@ public final class BoardScreen extends Screen {
         if (!message.isEmpty()) {
             g.textWithWordWrap(font, Component.literal(message), 12, 30, WIDTH - 24, 0xFFFACB75);
         } else {
-            String heading = (board.team().equals("red") ? tr("红队", "RED") : tr("蓝队", "BLUE"))
+            String teamLabel = switch (board.team().toLowerCase(java.util.Locale.ROOT)) {
+                case "red" -> tr("红队", "RED");
+                case "blue" -> tr("蓝队", "BLUE");
+                case "green" -> tr("绿队", "GREEN");
+                case "yellow" -> tr("黄队", "YELLOW");
+                default -> board.team().toUpperCase(java.util.Locale.ROOT);
+            };
+            int teamColor = switch (board.team().toLowerCase(java.util.Locale.ROOT)) {
+                case "red" -> 0xFFFF5555;
+                case "blue" -> 0xFF5555FF;
+                case "green" -> 0xFF55FF55;
+                case "yellow" -> 0xFFFFFF55;
+                default -> 0xFF9EB7CE;
+            };
+            String heading = teamLabel
                     + "  " + board.score() + " / " + board.winScore() + tr(" 胜利分", " to win")
                     + "  ·  " + tr("总分 ", "Pool ") + board.totalScore();
-            g.text(font, heading, 12, 26, 0xFF9EB7CE);
+            g.text(font, heading, 12, 26, teamColor);
         }
         List<BoardState.Task> main = board == null ? List.of() : board.tasks().stream().filter(t -> !t.bonus()).toList();
         List<BoardState.Task> bonus = board == null ? List.of() : board.tasks().stream().filter(BoardState.Task::bonus).toList();
