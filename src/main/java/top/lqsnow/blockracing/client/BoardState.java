@@ -12,7 +12,7 @@ public record BoardState(String team, String state, boolean chinese, int score, 
     public static final int MAX_PACKET = 30_000;
     public static final int MAX_JSON = 512 * 1024;
     public record Task(String id, int index, String title, String requirement, String icon, String model,
-                       boolean glint, int score, boolean bonus, String status,
+                       boolean glint, int score, boolean bonus, boolean favorited, String status,
                        int current, int required, boolean progressKnown, boolean individual) {
         public double fraction() { return Math.min(1, Math.max(0, (double) current / required)); }
     }
@@ -40,7 +40,7 @@ public record BoardState(String team, String state, boolean chinese, int score, 
                 if (!Set.of("active", "queued", "resolved").contains(status)) throw new IOException("Invalid task state");
                 tasks.add(new Task(id, integer(r, "index", 1, 512), string(r, "title", 241, null),
                         string(r, "requirement", 8193, ""), string(r, "icon", 160, null), string(r, "model", 200, ""),
-                        bool(r, "glint"), integer(r, "score", 0, Integer.MAX_VALUE), bool(r, "bonus"), status,
+                        bool(r, "glint"), integer(r, "score", 0, Integer.MAX_VALUE), bool(r, "bonus"), bool(r, "favorited"), status,
                         integer(r, "current", 0, Integer.MAX_VALUE), integer(r, "required", 1, Integer.MAX_VALUE),
                         bool(r, "progressKnown"), bool(r, "individual")));
             }

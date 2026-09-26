@@ -80,9 +80,10 @@ public final class BoardScreen extends Screen {
             var task = bonus.get(index);
             boolean selected = mx >= x && mx < x + 146 && my >= 512 && my < 548;
             g.fill(x, 512, x + 146, 548, selected ? 0xFF3F3540 : 0xFF292937);
-            g.fill(x, 512, x + 2, 548, 0xFFF0BC62);
+            g.fill(x, 512, x + 2, 548, task.favorited() ? 0xFFFFD700 : 0xFFF0BC62);
             g.item(icon(task), x + 6, 522);
-            g.text(font, trim(task.title(), 116), x + 26, 519, 0xFFF1E1C3);
+            String titleText = (task.favorited() ? "★ " : "") + task.title();
+            g.text(font, trim(titleText, 116), x + 26, 519, task.favorited() ? 0xFFFFE875 : 0xFFF1E1C3);
             g.text(font, "+" + task.score() + " · " + status(task), x + 26, 534, 0xFFC6BDAE);
             if (selected) hovered = task;
         }
@@ -94,7 +95,11 @@ public final class BoardScreen extends Screen {
         if (hovered != null) {
             var lines = new ArrayList<net.minecraft.util.FormattedCharSequence>();
             int wrap = Math.max(100, Math.min(330, width - 24));
-            for (String text : List.of(hovered.title(), status(hovered) + " · " + hovered.score() + tr(" 分", " points"),
+            for (String text : List.of(hovered.title(),
+                    status(hovered) + " · " + hovered.score() + tr(" 分", " points"),
+                    !hovered.status().equals("resolved")
+                            ? (hovered.favorited() ? tr("★ 已加入队伍收藏（点击取消）", "★ Pinned to scoreboard (click to unpin)")
+                            : tr("点击加入队伍收藏 (显示在计分板)", "Click to pin to team scoreboard")) : "",
                     hovered.progressKnown() ? (hovered.individual() ? tr("最佳个人（须同一人满足） ", "Best player (one player required) ")
                             : tr("队伍共享进度 ", "Shared team progress ")) + hovered.current() + " / " + hovered.required() : "",
                     hovered.requirement())) {
@@ -114,7 +119,8 @@ public final class BoardScreen extends Screen {
         g.fill(x, y, x + w, y + w, selected ? 0xFF304C64 : resolved ? 0xFF202B32 : 0xFF1B3044);
         if (selected) g.outline(x, y, w, w, 0xFF9EEBEE);
         int ink = resolved || queued ? 0xFF9AAAB5 : 0xFFF1F5F9;
-        g.text(font, "#" + task.index(), x + 3, y + 2, 0xFF96A9B8);
+        String prefix = task.favorited() ? "★ " : "#" + task.index();
+        g.text(font, prefix, x + 3, y + 2, task.favorited() ? 0xFFFFD700 : 0xFF96A9B8);
         String score = task.score() + tr("分", "p");
         g.text(font, score, x + w - font.width(score) - 3, y + 2, 0xFFF0CB83);
         g.item(icon(task), x + (w - 16) / 2, y + 12);
@@ -163,5 +169,41 @@ public final class BoardScreen extends Screen {
     }
     @Override public boolean mouseScrolled(double x, double y, double horizontal, double vertical) {
         page = Math.max(0, page + (vertical < 0 ? 1 : vertical > 0 ? -1 : 0)); return true;
+    }
+
+    @Override public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        if (event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT || event.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+            BoardState board = BoardClient.snapshot;
+            if (board != null && !board.team().isEmpty() && !board.state().equals("PREGAME")) {
+                double mx = (event.x() - originX) / scale, my = (event.y() - originY) / scale;
+                // Check main grid (64 items)
+                List<BoardState.Task> main = board.tasks().stream().filter(t -> !t.bonus()).toList();
+                int s = slot(mx, my);
+                if (s >= 0) {
+                    int index = page * 64 + s;
+                    if (index < main.size()) {
+                        var task = main.get(index);
+                        if (!task.status().equals("resolved")) {
+                            BoardClient.toggleFavorite(task.id());
+                            return true;
+                        }
+                    }
+                }
+                // Check bonus bar (3 items)
+                List<BoardState.Task> bonus = board.tasks().stream().filter(BoardState.Task::bonus).toList();
+                for (int i = 0; i < 3; i++) {
+                    int x = 12 + i * 150, index = bonusPage * 3 + i;
+                    if (index >= bonus.size()) continue;
+                    if (mx >= x && mx < x + 146 && my >= 512 && my < 548) {
+                        var task = bonus.get(index);
+                        if (!task.status().equals("resolved")) {
+                            BoardClient.toggleFavorite(task.id());
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return super.mouseClicked(event, doubleClick);
     }
 }

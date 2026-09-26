@@ -28,13 +28,14 @@ class BoardStateTest {
         return "{\"version\":1,\"team\":\"red\",\"state\":\"INGAME\",\"chinese\":true,\"score\":3,\"winScore\":70,\"totalScore\":140,\"tasks\":[" + tasks + "]}";
     }
     private String task() {
-        return "{\"id\":\"SPY\",\"index\":1,\"title\":\"观察20种生物\",\"icon\":\"minecraft:spyglass\",\"score\":3,\"status\":\"active\",\"current\":8,\"required\":20,\"progressKnown\":true}";
+        return "{\"id\":\"SPY\",\"index\":1,\"title\":\"观察20种生物\",\"icon\":\"minecraft:spyglass\",\"score\":3,\"bonus\":false,\"favorited\":true,\"status\":\"active\",\"current\":8,\"required\":20,\"progressKnown\":true}";
     }
     @Test void readsUtf8ServerSnapshotAndKeepsExactCounts() throws Exception {
         var state = BoardState.decode(gzip(snapshot(task())));
         assertEquals("观察20种生物", state.tasks().getFirst().title());
         assertEquals(0.4, state.tasks().getFirst().fraction());
         assertEquals(70, state.winScore());
+        assertTrue(state.tasks().getFirst().favorited());
     }
     @Test void rejectsProtocolMismatchAndDuplicateIds() throws Exception {
         assertThrows(IOException.class, () -> BoardState.decode(gzip(snapshot(task()).replace("\"version\":1", "\"version\":2"))));

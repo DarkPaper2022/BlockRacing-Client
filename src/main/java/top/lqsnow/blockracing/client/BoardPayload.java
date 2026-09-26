@@ -27,4 +27,21 @@ public record BoardPayload(byte[] data) implements CustomPacketPayload {
         };
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
+
+    public record FavoriteAction(String target) implements CustomPacketPayload {
+        public static final Type<FavoriteAction> TYPE = new Type<>(Identifier.fromNamespaceAndPath("blockracing", "board_favorite"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, FavoriteAction> CODEC = new StreamCodec<>() {
+            public FavoriteAction decode(RegistryFriendlyByteBuf buf) {
+                int len = buf.readableBytes();
+                if (len > 160) throw new IllegalArgumentException("Target ID too long");
+                byte[] bytes = new byte[len];
+                buf.readBytes(bytes);
+                return new FavoriteAction(new String(bytes, java.nio.charset.StandardCharsets.UTF_8));
+            }
+            public void encode(RegistryFriendlyByteBuf buf, FavoriteAction action) {
+                buf.writeBytes(action.target().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            }
+        };
+        @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
+    }
 }

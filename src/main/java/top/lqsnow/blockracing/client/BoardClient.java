@@ -16,6 +16,7 @@ public final class BoardClient implements ClientModInitializer {
     @Override public void onInitializeClient() {
         PayloadTypeRegistry.clientboundPlay().register(BoardPayload.TYPE, BoardPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(BoardPayload.Request.TYPE, BoardPayload.Request.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(BoardPayload.FavoriteAction.TYPE, BoardPayload.FavoriteAction.CODEC);
         ClientPlayNetworking.registerGlobalReceiver(BoardPayload.TYPE, (payload, context) -> {
             try {
                 snapshot = BoardState.decode(payload.data());
@@ -36,6 +37,13 @@ public final class BoardClient implements ClientModInitializer {
     }
     public static void subscribe(boolean open) {
         if (supported()) ClientPlayNetworking.send(new BoardPayload.Request(open));
+    }
+
+    public static void toggleFavorite(String target) {
+        if (target != null && !target.isEmpty() && Minecraft.getInstance().getConnection() != null
+                && ClientPlayNetworking.canSend(BoardPayload.FavoriteAction.TYPE)) {
+            ClientPlayNetworking.send(new BoardPayload.FavoriteAction(target));
+        }
     }
 
     /** Only consumes Tab in gameplay on compatible servers; leaves chat and other screens alone. */
