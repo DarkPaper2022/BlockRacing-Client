@@ -53,9 +53,15 @@ public final class BoardClient implements ClientModInitializer {
         if (!BoardKeyPolicy.intercept(action, event.key(), event.modifiers(), supported(),
                 client.gui.screen() != null && !(client.gui.screen() instanceof BoardScreen))) return false;
         if (action == GLFW.GLFW_PRESS) {
-            if (client.gui.screen() instanceof BoardScreen) client.gui.setScreen(null);
-            else { error = ""; client.gui.setScreen(new BoardScreen()); }
+            if (!(client.gui.screen() instanceof BoardScreen)) {
+                error = "";
+                client.gui.setScreen(new BoardScreen());
+            }
+        } else if (action == GLFW.GLFW_RELEASE) {
+            if (client.gui.screen() instanceof BoardScreen) {
+                client.gui.setScreen(null);
+            }
         }
-        return true; // Consume repeats so a held key cannot toggle repeatedly.
+        return true; // Consume repeats and press/release so vanilla player list doesn't flash
     }
 }

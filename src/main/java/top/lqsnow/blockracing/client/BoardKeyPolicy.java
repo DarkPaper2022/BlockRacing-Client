@@ -7,7 +7,7 @@ final class BoardKeyPolicy {
             | GLFW.GLFW_MOD_ALT | GLFW.GLFW_MOD_SUPER;
     private BoardKeyPolicy() { }
     static boolean intercept(int action, int key, int modifiers, boolean supported, boolean otherScreen) {
-        return action != GLFW.GLFW_RELEASE && key == GLFW.GLFW_KEY_TAB
+        return key == GLFW.GLFW_KEY_TAB
                 && (modifiers & ACTIVE_MODIFIERS) == 0 && supported && !otherScreen;
     }
 }

@@ -87,7 +87,7 @@ public final class BoardScreen extends Screen {
             g.text(font, "+" + task.score() + " · " + status(task), x + 26, 534, 0xFFC6BDAE);
             if (selected) hovered = task;
         }
-        String footer = "Tab / Esc " + tr("关闭", "close") + " · " + tr("悬停查看规则", "hover for rules");
+        String footer = tr("按住 Tab 查看大表，松开关闭", "Hold Tab to view board, release to close") + " · " + tr("悬停查看规则", "hover for rules");
         if (pages(main.size(), 64) > 1) footer += " · PgUp/PgDn " + (page + 1) + "/" + pages(main.size(), 64);
         if (board != null && System.nanoTime() - BoardClient.receivedAt > 4_000_000_000L) footer = tr("同步延迟：当前为旧快照", "STALE: waiting for server update");
         g.text(font, trim(footer, WIDTH - 24), 12, 558, 0xFFAFBDCA);
@@ -158,7 +158,6 @@ public final class BoardScreen extends Screen {
         });
     }
     @Override public boolean keyPressed(KeyEvent event) {
-        if (event.key() == GLFW.GLFW_KEY_TAB && (event.modifiers() & BoardKeyPolicy.ACTIVE_MODIFIERS) == 0) { onClose(); return true; }
         if (event.key() == GLFW.GLFW_KEY_PAGE_DOWN) { page++; return true; }
         if (event.key() == GLFW.GLFW_KEY_PAGE_UP) { page = Math.max(0, page - 1); return true; }
         if (event.key() == GLFW.GLFW_KEY_B) { bonusPage++; if (BoardClient.snapshot != null) bonusPage %= pages((int) BoardClient.snapshot.tasks().stream().filter(BoardState.Task::bonus).count(), 3); return true; }
