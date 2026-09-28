@@ -5,7 +5,8 @@
   "client": [
     "KeyboardHandlerMixin",
     "PlayerTabOverlayMixin",
-    "ConnectionMixin"
+    "ConnectionMixin",
+    "ClientPacketListenerMixin"
   ],
   "injectors": {"defaultRequire": 1}
 }

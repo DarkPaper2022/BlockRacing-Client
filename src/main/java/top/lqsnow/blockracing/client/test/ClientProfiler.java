@@ -84,8 +84,19 @@ public final class ClientProfiler {
         }
     }
 
+    public static synchronized boolean isWaitingForChunk() {
+        return active && inFlightPacketReceivedNanos != 0 && inFlightChunkLoadedNanos == 0;
+    }
+
+    public static synchronized int targetX() { return inFlightTargetX; }
+    public static synchronized int targetZ() { return inFlightTargetZ; }
+
+    public static synchronized boolean hasInFlightRequest() {
+        return active && inFlightStartNanos != 0;
+    }
+
     public static synchronized void recordFirstFrameRendered() {
-        if (!active || inFlightPacketReceivedNanos == 0) return;
+        if (!active || inFlightPacketReceivedNanos == 0 || inFlightChunkLoadedNanos == 0) return;
         long now = System.nanoTime();
         if (inFlightChunkLoadedNanos == 0) {
             inFlightChunkLoadedNanos = now;

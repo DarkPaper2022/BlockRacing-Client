@@ -18,15 +18,19 @@ public class NetworkLatencyHandlerTest {
         assertEquals(0, NetworkLatencyHandler.getInboundLatencyMs());
         assertEquals(0, NetworkLatencyHandler.getOutboundLatencyMs());
         assertEquals(0, NetworkLatencyHandler.getJitterMs());
+        assertEquals(0, NetworkLatencyHandler.getMaxBytesPerSecond());
     }
 
     @Test
     public void testConfigInjection() {
-        NetworkLatencyHandler.setConfig(150, 25);
+        // 60ms RTT, 10ms Jitter, 3MB/s bandwidth
+        long threeMBps = 3 * 1024 * 1024;
+        NetworkLatencyHandler.setConfig(60, 10, threeMBps);
         assertTrue(NetworkLatencyHandler.isEnabled());
-        assertEquals(150, NetworkLatencyHandler.getInboundLatencyMs());
-        assertEquals(150, NetworkLatencyHandler.getOutboundLatencyMs());
-        assertEquals(25, NetworkLatencyHandler.getJitterMs());
+        assertEquals(30, NetworkLatencyHandler.getInboundLatencyMs()); // half of 60ms RTT
+        assertEquals(30, NetworkLatencyHandler.getOutboundLatencyMs());
+        assertEquals(10, NetworkLatencyHandler.getJitterMs());
+        assertEquals(threeMBps, NetworkLatencyHandler.getMaxBytesPerSecond());
 
         NetworkLatencyHandler.clear();
         assertFalse(NetworkLatencyHandler.isEnabled());
@@ -34,8 +38,9 @@ public class NetworkLatencyHandlerTest {
 
     @Test
     public void testNegativeClamping() {
-        NetworkLatencyHandler.setConfig(-50, -10);
+        NetworkLatencyHandler.setConfig(-50, -10, -100);
         assertFalse(NetworkLatencyHandler.isEnabled());
         assertEquals(0, NetworkLatencyHandler.getInboundLatencyMs());
+        assertEquals(0, NetworkLatencyHandler.getMaxBytesPerSecond());
     }
 }

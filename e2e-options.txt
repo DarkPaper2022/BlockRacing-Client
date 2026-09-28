@@ -1,0 +1,13 @@
+version:4903
+enableVsync:false
+graphicsPreset:"fast"
+maxFps:30
+renderDistance:12
+simulationDistance:8
+fullscreen:false
+narrator:0
+onboardAccessibility:false
+skipMultiplayerWarning:true
+joinedFirstServer:true
+startedCleanly:true
+pauseOnLostFocus:false

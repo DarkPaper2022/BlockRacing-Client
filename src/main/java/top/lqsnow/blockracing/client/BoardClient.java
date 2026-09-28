@@ -2,6 +2,7 @@ package top.lqsnow.blockracing.client;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
@@ -9,6 +10,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.input.KeyEvent;
 import org.lwjgl.glfw.GLFW;
 import top.lqsnow.blockracing.client.test.TestScenarioRunner;
+import top.lqsnow.blockracing.client.test.ClientProfiler;
+import top.lqsnow.blockracing.client.test.TestAutoConnector;
 
 public final class BoardClient implements ClientModInitializer {
     public static BoardState snapshot;
@@ -33,21 +36,26 @@ public final class BoardClient implements ClientModInitializer {
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> clear());
 
         // Register TestScenario runner on client end tick
+        ClientTickEvents.END_CLIENT_TICK.register(TestAutoConnector::onClientTick);
         ClientTickEvents.END_CLIENT_TICK.register(TestScenarioRunner::onClientTick);
+        LevelRenderEvents.END_MAIN.register(context -> ClientProfiler.recordFirstFrameRendered());
 
         // Auto-configure latency or scenario from system properties if launched in test mode
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
-            String latencyProp = System.getProperty("blockracing.test.latency");
+            String rttProp = System.getProperty("blockracing.test.rtt");
             String jitterProp = System.getProperty("blockracing.test.jitter");
-            if (latencyProp != null) {
+            String bwProp = System.getProperty("blockracing.test.bandwidth");
+            if (rttProp != null) {
                 try {
-                    long latency = Long.parseLong(latencyProp);
+                    long rtt = Long.parseLong(rttProp);
                     long jitter = jitterProp != null ? Long.parseLong(jitterProp) : 0;
-                    top.lqsnow.blockracing.client.test.NetworkLatencyHandler.setConfig(latency, jitter);
+                    long bw = bwProp != null ? Long.parseLong(bwProp) : 0;
+                    top.lqsnow.blockracing.client.test.NetworkLatencyHandler.setConfig(rtt, jitter, bw);
                 } catch (NumberFormatException ignored) {}
             }
             String autoTeam = System.getProperty("blockracing.test.team");
-            if (autoTeam != null && !autoTeam.isEmpty()) {
+            String scenario = System.getProperty("blockracing.test.scenario");
+            if (autoTeam != null && !autoTeam.isEmpty() && scenario != null && !scenario.isEmpty()) {
                 TestScenarioRunner.startAutoPlay(autoTeam);
             }
         });
