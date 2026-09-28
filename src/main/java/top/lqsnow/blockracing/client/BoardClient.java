@@ -1,12 +1,14 @@
 package top.lqsnow.blockracing.client;
 
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.input.KeyEvent;
 import org.lwjgl.glfw.GLFW;
+import top.lqsnow.blockracing.client.test.TestScenarioRunner;
 
 public final class BoardClient implements ClientModInitializer {
     public static BoardState snapshot;
@@ -29,6 +31,26 @@ public final class BoardClient implements ClientModInitializer {
         });
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> clear());
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> clear());
+
+        // Register TestScenario runner on client end tick
+        ClientTickEvents.END_CLIENT_TICK.register(TestScenarioRunner::onClientTick);
+
+        // Auto-configure latency or scenario from system properties if launched in test mode
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+            String latencyProp = System.getProperty("blockracing.test.latency");
+            String jitterProp = System.getProperty("blockracing.test.jitter");
+            if (latencyProp != null) {
+                try {
+                    long latency = Long.parseLong(latencyProp);
+                    long jitter = jitterProp != null ? Long.parseLong(jitterProp) : 0;
+                    top.lqsnow.blockracing.client.test.NetworkLatencyHandler.setConfig(latency, jitter);
+                } catch (NumberFormatException ignored) {}
+            }
+            String autoTeam = System.getProperty("blockracing.test.team");
+            if (autoTeam != null && !autoTeam.isEmpty()) {
+                TestScenarioRunner.startAutoPlay(autoTeam);
+            }
+        });
     }
 
     public static void clear() { snapshot = null; receivedAt = 0; error = ""; }
