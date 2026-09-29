@@ -197,7 +197,13 @@ public final class TestScenarioRunner {
                     check(!task.favorited(), "resolved target remained favorited");
                     check(board.score() == 0 || board.score() == mutexTargetScore,
                             "unexpected mutex score " + board.score());
-                    marker("MUTEX_RESULT score=" + board.score() + " targetScore=" + mutexTargetScore);
+                    // The server legitimately decides which of the two near-simultaneous
+                    // completions wins. Let that winner exercise both free and paid RTP;
+                    // the loser still exercises free RTP. This keeps the race real without
+                    // making the remainder of the scenario depend on scheduler ordering.
+                    maxIterations = board.score() == mutexTargetScore ? 2 : 1;
+                    marker("MUTEX_RESULT score=" + board.score() + " targetScore=" + mutexTargetScore
+                            + " rtpIterations=" + maxIterations);
                     transitionTo(Step.TRIGGER_RTP);
                 }
                 case TRIGGER_RTP -> {
