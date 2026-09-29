@@ -44,6 +44,8 @@ public final class TestScenarioRunner {
     private static int mutexTargetScore;
     private static long mutexDispatchAtMillis;
     private static long rtpLastSentAtMillis;
+    private static double initialRtpOriginX;
+    private static double initialRtpOriginZ;
     private static final AtomicInteger ticksInState = new AtomicInteger();
 
     private TestScenarioRunner() {}
@@ -126,6 +128,8 @@ public final class TestScenarioRunner {
                     BoardState board = BoardClient.snapshot;
                     if (isInGame(board)) {
                         marker("GAME_STARTED tasks=" + board.tasks().size());
+                        initialRtpOriginX = client.player.getX();
+                        initialRtpOriginZ = client.player.getZ();
                         transitionTo(Step.WAIT_INITIAL_RTP);
                     } else if (coordinator && ticks >= 80 && ticks % 60 == 0) {
                         if (!clickSlot(client, 39)) client.getConnection().sendCommand("menu");
@@ -136,7 +140,9 @@ public final class TestScenarioRunner {
                 case WAIT_INITIAL_RTP -> {
                     double x = client.player.getX();
                     double z = client.player.getZ();
-                    if ((Math.abs(x) > 32.0 || Math.abs(z) > 32.0)
+                    double dx = x - initialRtpOriginX;
+                    double dz = z - initialRtpOriginZ;
+                    if (dx * dx + dz * dz > 32.0 * 32.0
                             && client.level != null && client.level.hasChunkAt(client.player.blockPosition())) {
                         marker("INITIAL_RTP_COMPLETE target=" + (int) x + "," + (int) z);
                         transitionTo(Step.VALIDATE_BOARD);
