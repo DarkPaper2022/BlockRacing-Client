@@ -95,6 +95,10 @@ public final class ClientProfiler {
         return active && inFlightStartNanos != 0;
     }
 
+    public static synchronized boolean hasTeleportPacketForCurrentRequest() {
+        return active && inFlightStartNanos != 0 && inFlightPacketReceivedNanos != 0;
+    }
+
     public static synchronized void recordFirstFrameRendered() {
         if (!active || inFlightPacketReceivedNanos == 0 || inFlightChunkLoadedNanos == 0) return;
         long now = System.nanoTime();

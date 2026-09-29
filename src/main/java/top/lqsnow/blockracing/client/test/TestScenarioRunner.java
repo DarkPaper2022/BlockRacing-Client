@@ -21,10 +21,12 @@ public final class TestScenarioRunner {
     private static final Logger LOGGER = Logger.getLogger("BlockRacingClientTest");
     private static final long GAME_START_TIMEOUT_MS = 240_000;
     private static final long STEP_TIMEOUT_MS = 45_000;
+    private static final long RTP_TIMEOUT_MS = 1_200_000;
+    private static final long RTP_RETRY_INTERVAL_MS = 15_000;
 
     public enum Step {
         IDLE, OPEN_LOBBY, SELECT_TEAM, WAIT_TEAM, READY, WAIT_GAME_START,
-        VALIDATE_BOARD, FAVORITE, WAIT_MUTEX_FIXTURE, VERIFY_MUTEX,
+        WAIT_INITIAL_RTP, VALIDATE_BOARD, FAVORITE, WAIT_MUTEX_FIXTURE, VERIFY_MUTEX,
         TRIGGER_RTP, MEASURE_RTP, WAIT_NEXT_RTP, COMPLETED, FAILED
     }
 
@@ -41,6 +43,7 @@ public final class TestScenarioRunner {
     private static String mutexTarget;
     private static int mutexTargetScore;
     private static long mutexDispatchAtMillis;
+    private static long rtpLastSentAtMillis;
     private static final AtomicInteger ticksInState = new AtomicInteger();
 
     private TestScenarioRunner() {}
@@ -123,12 +126,22 @@ public final class TestScenarioRunner {
                     BoardState board = BoardClient.snapshot;
                     if (isInGame(board)) {
                         marker("GAME_STARTED tasks=" + board.tasks().size());
-                        transitionTo(Step.VALIDATE_BOARD);
+                        transitionTo(Step.WAIT_INITIAL_RTP);
                     } else if (coordinator && ticks >= 80 && ticks % 60 == 0) {
                         if (!clickSlot(client, 39)) client.getConnection().sendCommand("menu");
                         marker("START_ATTEMPT");
                     }
                     failIfTimedOut("natural game start", GAME_START_TIMEOUT_MS, client);
+                }
+                case WAIT_INITIAL_RTP -> {
+                    double x = client.player.getX();
+                    double z = client.player.getZ();
+                    if ((Math.abs(x) > 32.0 || Math.abs(z) > 32.0)
+                            && client.level != null && client.level.hasChunkAt(client.player.blockPosition())) {
+                        marker("INITIAL_RTP_COMPLETE target=" + (int) x + "," + (int) z);
+                        transitionTo(Step.VALIDATE_BOARD);
+                    }
+                    failIfTimedOut("queued initial RTP", GAME_START_TIMEOUT_MS, client);
                 }
                 case VALIDATE_BOARD -> {
                     BoardState board = requireBoard();
@@ -192,6 +205,7 @@ public final class TestScenarioRunner {
                     samplesBeforeRequest = ClientProfiler.getSamples().size();
                     ClientProfiler.recordTeleportSent(System.currentTimeMillis());
                     client.getConnection().sendCommand("menu randomTP");
+                    rtpLastSentAtMillis = System.currentTimeMillis();
                     marker("RTP_SENT iteration=" + currentIteration);
                     transitionTo(Step.MEASURE_RTP);
                 }
@@ -200,8 +214,14 @@ public final class TestScenarioRunner {
                         logLatestSample();
                         if (currentIteration >= maxIterations) transitionTo(Step.COMPLETED);
                         else transitionTo(Step.WAIT_NEXT_RTP);
+                    } else if (!ClientProfiler.hasTeleportPacketForCurrentRequest()
+                            && System.currentTimeMillis() - rtpLastSentAtMillis >= RTP_RETRY_INTERVAL_MS) {
+                        ClientProfiler.recordTeleportSent(System.currentTimeMillis());
+                        client.getConnection().sendCommand("menu randomTP");
+                        rtpLastSentAtMillis = System.currentTimeMillis();
+                        marker("RTP_RETRY iteration=" + currentIteration);
                     }
-                    failIfTimedOut("RTP completion", STEP_TIMEOUT_MS, client);
+                    failIfTimedOut("RTP completion", RTP_TIMEOUT_MS, client);
                 }
                 case WAIT_NEXT_RTP -> {
                     if (elapsed() >= intervalSeconds * 1_000L) transitionTo(Step.TRIGGER_RTP);

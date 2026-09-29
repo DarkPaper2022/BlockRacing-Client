@@ -29,7 +29,9 @@ public class ClientProfilerTest {
         assertTrue(ClientProfiler.isActive());
 
         ClientProfiler.recordTeleportSent(1);
+        assertFalse(ClientProfiler.hasTeleportPacketForCurrentRequest());
         ClientProfiler.recordTeleportPacketReceived(1000, -2000);
+        assertTrue(ClientProfiler.hasTeleportPacketForCurrentRequest());
         ClientProfiler.recordChunkLoaded();
         ClientProfiler.recordFirstFrameRendered();
 
