@@ -120,6 +120,8 @@ public final class TestScenarioRunner {
                         }
                     } else if (clickSlot(client, 38)) {
                         marker("READY_CLICKED");
+                        initialRtpOriginX = client.player.getX();
+                        initialRtpOriginZ = client.player.getZ();
                         transitionTo(Step.WAIT_GAME_START);
                     }
                     failIfTimedOut("ready click", STEP_TIMEOUT_MS, client);
@@ -128,8 +130,6 @@ public final class TestScenarioRunner {
                     BoardState board = BoardClient.snapshot;
                     if (isInGame(board)) {
                         marker("GAME_STARTED tasks=" + board.tasks().size());
-                        initialRtpOriginX = client.player.getX();
-                        initialRtpOriginZ = client.player.getZ();
                         transitionTo(Step.WAIT_INITIAL_RTP);
                     } else if (coordinator && ticks >= 80 && ticks % 60 == 0) {
                         if (!clickSlot(client, 39)) client.getConnection().sendCommand("menu");
