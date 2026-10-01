@@ -6,19 +6,23 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class BoardKeyPolicyTest {
     @Test void ordinaryTabAndRepeatsAreConsumedOnlyOnCompatibleGameplay() {
-        assertTrue(BoardKeyPolicy.intercept(GLFW.GLFW_PRESS, GLFW.GLFW_KEY_TAB, 0, true, false));
-        assertTrue(BoardKeyPolicy.intercept(GLFW.GLFW_REPEAT, GLFW.GLFW_KEY_TAB, 0, true, false));
-        assertFalse(BoardKeyPolicy.intercept(GLFW.GLFW_PRESS, GLFW.GLFW_KEY_TAB, 0, false, false));
-        assertFalse(BoardKeyPolicy.intercept(GLFW.GLFW_PRESS, GLFW.GLFW_KEY_TAB, 0, true, true));
+        assertTrue(BoardKeyPolicy.intercept(GLFW.GLFW_PRESS, GLFW.GLFW_KEY_TAB, 0, true, false, false));
+        assertTrue(BoardKeyPolicy.intercept(GLFW.GLFW_REPEAT, GLFW.GLFW_KEY_TAB, 0, true, false, true));
+        assertFalse(BoardKeyPolicy.intercept(GLFW.GLFW_PRESS, GLFW.GLFW_KEY_TAB, 0, false, false, false));
+        assertFalse(BoardKeyPolicy.intercept(GLFW.GLFW_PRESS, GLFW.GLFW_KEY_TAB, 0, true, true, false));
     }
     @Test void shiftAndReleasesPassThroughWithoutStuckPlayerList() {
-        assertFalse(BoardKeyPolicy.intercept(GLFW.GLFW_PRESS, GLFW.GLFW_KEY_TAB, GLFW.GLFW_MOD_SHIFT, true, false));
-        assertTrue(BoardKeyPolicy.intercept(GLFW.GLFW_RELEASE, GLFW.GLFW_KEY_TAB, 0, true, false));
-        assertFalse(BoardKeyPolicy.intercept(GLFW.GLFW_PRESS, GLFW.GLFW_KEY_T, 0, true, false));
+        assertFalse(BoardKeyPolicy.intercept(GLFW.GLFW_PRESS, GLFW.GLFW_KEY_TAB, GLFW.GLFW_MOD_SHIFT, true, false, false));
+        // Release closes an open board, but otherwise reaches vanilla: Shift+Tab, then
+        // Shift released before Tab, must not leave the player list stuck open.
+        assertTrue(BoardKeyPolicy.intercept(GLFW.GLFW_RELEASE, GLFW.GLFW_KEY_TAB, 0, true, false, true));
+        assertFalse(BoardKeyPolicy.intercept(GLFW.GLFW_RELEASE, GLFW.GLFW_KEY_TAB, 0, true, false, false));
+        assertFalse(BoardKeyPolicy.intercept(GLFW.GLFW_RELEASE, GLFW.GLFW_KEY_TAB, GLFW.GLFW_MOD_SHIFT, true, false, false));
+        assertFalse(BoardKeyPolicy.intercept(GLFW.GLFW_PRESS, GLFW.GLFW_KEY_T, 0, true, false, false));
         // Caps Lock (0x0010) and Num Lock (0x0020) must not block ordinary Tab from opening the board
-        assertTrue(BoardKeyPolicy.intercept(GLFW.GLFW_PRESS, GLFW.GLFW_KEY_TAB, GLFW.GLFW_MOD_CAPS_LOCK, true, false));
-        assertTrue(BoardKeyPolicy.intercept(GLFW.GLFW_PRESS, GLFW.GLFW_KEY_TAB, GLFW.GLFW_MOD_NUM_LOCK, true, false));
+        assertTrue(BoardKeyPolicy.intercept(GLFW.GLFW_PRESS, GLFW.GLFW_KEY_TAB, GLFW.GLFW_MOD_CAPS_LOCK, true, false, false));
+        assertTrue(BoardKeyPolicy.intercept(GLFW.GLFW_PRESS, GLFW.GLFW_KEY_TAB, GLFW.GLFW_MOD_NUM_LOCK, true, false, false));
         assertFalse(BoardKeyPolicy.intercept(GLFW.GLFW_PRESS, GLFW.GLFW_KEY_TAB,
-                GLFW.GLFW_MOD_SHIFT | GLFW.GLFW_MOD_NUM_LOCK, true, false));
+                GLFW.GLFW_MOD_SHIFT | GLFW.GLFW_MOD_NUM_LOCK, true, false, false));
     }
 }

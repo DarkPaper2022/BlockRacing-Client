@@ -9,6 +9,7 @@ import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.input.KeyEvent;
 import org.lwjgl.glfw.GLFW;
+import top.lqsnow.blockracing.client.test.AcceptanceScenario;
 import top.lqsnow.blockracing.client.test.TestScenarioRunner;
 import top.lqsnow.blockracing.client.test.ClientProfiler;
 import top.lqsnow.blockracing.client.test.TestAutoConnector;
@@ -32,12 +33,17 @@ public final class BoardClient implements ClientModInitializer {
                 error = "目标数据无效，请检查服务端版本 / Invalid server board data";
             }
         });
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> clear());
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
+            clear();
+            // Re-applied on JOIN; delaying login/compression packets on a reconnect breaks the handshake.
+            top.lqsnow.blockracing.client.test.NetworkLatencyHandler.clear();
+        });
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> clear());
 
         // Register TestScenario runner on client end tick
         ClientTickEvents.END_CLIENT_TICK.register(TestAutoConnector::onClientTick);
         ClientTickEvents.END_CLIENT_TICK.register(TestScenarioRunner::onClientTick);
+        ClientTickEvents.END_CLIENT_TICK.register(AcceptanceScenario::onClientTick);
         LevelRenderEvents.END_MAIN.register(context -> ClientProfiler.recordFirstFrameRendered());
 
         // Auto-configure latency or scenario from system properties if launched in test mode
@@ -55,7 +61,9 @@ public final class BoardClient implements ClientModInitializer {
             }
             String autoTeam = System.getProperty("blockracing.test.team");
             String scenario = System.getProperty("blockracing.test.scenario");
-            if (autoTeam != null && !autoTeam.isEmpty() && scenario != null && !scenario.isEmpty()) {
+            if (AcceptanceScenario.enabled()) {
+                AcceptanceScenario.onJoin();
+            } else if (autoTeam != null && !autoTeam.isEmpty() && scenario != null && !scenario.isEmpty()) {
                 TestScenarioRunner.startAutoPlay(autoTeam);
             }
         });
@@ -79,9 +87,9 @@ public final class BoardClient implements ClientModInitializer {
     /** Only consumes Tab in gameplay on compatible servers; leaves chat and other screens alone. */
     public static boolean onKey(int action, KeyEvent event) {
         Minecraft client = Minecraft.getInstance();
-        // Always let vanilla release its mapping, even if Shift was released before Tab.
+        boolean boardOpen = client.gui.screen() instanceof BoardScreen;
         if (!BoardKeyPolicy.intercept(action, event.key(), event.modifiers(), supported(),
-                client.gui.screen() != null && !(client.gui.screen() instanceof BoardScreen))) return false;
+                client.gui.screen() != null && !boardOpen, boardOpen)) return false;
         if (action == GLFW.GLFW_PRESS) {
             if (!(client.gui.screen() instanceof BoardScreen)) {
                 error = "";

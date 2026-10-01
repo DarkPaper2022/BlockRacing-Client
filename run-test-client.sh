@@ -14,6 +14,9 @@ HEADLESS="${8:-true}"
 PORT="${9:-25575}"
 COORDINATOR="${10:-false}"
 TARGETS="${11:-CHERRY_PLANKS,STONE,DIRT,COBBLESTONE}"
+SCENARIO="${BLOCKRACING_TEST_SCENARIO:-dual-client}"
+ROLE="${BLOCKRACING_TEST_ROLE:-}"
+SYNC_DIR="${BLOCKRACING_TEST_SYNC_DIR:-}"
 case "${TEAM}" in
   red) DISPLAY_NUMBER=111 ;;
   blue) DISPLAY_NUMBER=112 ;;
@@ -21,6 +24,7 @@ case "${TEAM}" in
   yellow) DISPLAY_NUMBER=114 ;;
   *) DISPLAY_NUMBER=115 ;;
 esac
+DISPLAY_NUMBER="${BLOCKRACING_TEST_DISPLAY:-${DISPLAY_NUMBER}}"
 
 export JAVA_HOME="${BLOCKRACING_CLIENT_JAVA_HOME:-/home/darkpaper/.local/share/hmcl/java/linux-x86_64/mojang-java-runtime-epsilon}"
 
@@ -34,7 +38,9 @@ LAUNCH_CMD=(
   ./gradlew runClient -x classes
   --args="--username ${BOT_NAME} --quickPlayMultiplayer 127.0.0.1:${PORT}"
   -Dblockracing.test.instance="${BOT_NAME}"
-  -Dblockracing.test.scenario=dual-client
+  -Dblockracing.test.scenario="${SCENARIO}"
+  -Dblockracing.test.role="${ROLE}"
+  -Dblockracing.test.syncDir="${SYNC_DIR}"
   -Dblockracing.test.autoconnect=true
   -Dblockracing.test.host=127.0.0.1
   -Dblockracing.test.port="${PORT}"
